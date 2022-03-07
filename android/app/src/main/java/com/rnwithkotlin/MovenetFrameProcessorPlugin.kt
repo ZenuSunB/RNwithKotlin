@@ -59,14 +59,60 @@ class MovenetFrameProcessorPlugin(reactContext: ReactApplicationContext): FrameP
         }
         val bitmap: Bitmap = toBitmap(frame)
         val ans = net.estimatePoses(bitmap)
-        val tmp: Int = ans.count()
-        val matrixList = DataTypeTransfor().listPerson2ListMatrix_Jama(ans)
-        for (i in 0..tmp - 1) {
-            AffineTransprocess().printJama(matrixList.get(i))
-        }
-        return matrixList.get(0).get(0, 0);
+
+
+        return
     }
 
+    private fun frameZoom(obj:List<Matrix>, screenHeight:Int, screenWidth:Int, imageHeight:Int, imageWidth:Int):List<Matrix>
+    {
+        val HeightRatio:Double=screenHeight.toDouble()/imageHeight.toDouble()
+        val WidthRatio:Double=screenWidth.toDouble()/imageWidth.toDouble()
+        var afterZoom_obj:MutableList<Matrix> = arrayListOf<Matrix>()
+        val sampleNun=afterZoom_obj.count()
+
+        obj.forEach {
+            var temp:Matrix= Matrix(it.rowDimension,it.columnDimension)
+            for(i in 0..it.rowDimension-1)
+            {
+                for(j in 0..it.columnDimension-1)
+                {
+                    when(j)
+                    {
+                        0->{
+                            temp.set(i,j,temp.get(i,j)*WidthRatio)
+                        }
+                        1->{
+                            temp.set(i,j,temp.get(i,j)*HeightRatio)
+                        }
+                    }
+                }
+            }
+            afterZoom_obj.add(temp)
+        }
+        return afterZoom_obj
+    }
+
+    private fun ListMatrix2WritableArray(obj:List<Matrix>):WritableArray
+    {
+        var obj2:WritableArray = WritableNativeArray()
+        obj.forEach{
+            var temp:WritableArray = WritableNativeArray()
+            val rowNum=it.rowDimension
+            val colNum=it.columnDimension
+            for(i in 0..rowNum-1)
+            {
+                var ttemp:WritableArray = WritableNativeArray()
+                for(j in 0..colNum-1)
+                {
+                    ttemp.pushDouble(it.get(i,j))
+                }
+                temp.pushArray(ttemp)
+            }
+            obj2.pushArray(temp)
+        }
+        return obj2
+    }
 //    fun shutdown() {
 //        if (net == null) {
 //            return;
